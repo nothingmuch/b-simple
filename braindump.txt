@@ -20,6 +20,15 @@ The difficulty of managing B::OP trees with B::Generate is due to several reason
 	   a more abstract way in much the same way as Perl's op.c handles the
 	   creation of these ops using convenience routines.
 
+	4. Execution context is stored in a flag in each op, this should be
+	   maintained automatically. Some expressions have inherited context, some
+	   expressions are void (in a lineseq, when not the first child), some
+	   expressions are list (as a sibling of a pushmark, and some expressions
+	   are scalar (child of a unop, binop, etc). Don't know how to handle
+	   subroutine prototypes yet. I suppose context should be preserved for all
+	   entersubs in the entersub itself and applied to the positional children
+	   as appropriate even if they change. For new calls this might be tricky.
+
 The B::Simple optree representation is designed to mask the details of
 "attached" versus "floating" optrees.
 
@@ -57,5 +66,4 @@ The class hierarchy in B::Simple:
 	a collection is an abstraction for parent <-> child relationships. It
 	provides a consistent API for getting at the child objects regardless of
 	whether the optree is floating or attached.
-
 	
