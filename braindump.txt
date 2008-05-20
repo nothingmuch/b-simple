@@ -1,0 +1,61 @@
+B::Simple is a simplified view of the B::OP tree, with some additional features.
+
+The difficulty of managing B::OP trees with B::Generate is due to several reasons:
+
+	1. there is a parallel structure that must be maintained, first/sibling
+	   (tree order) and next (execution order). The execution order can be
+	   inferred from the tree order and vice versa, so B::Simple makes this
+	   automatic. (though only execution order truly matters for runtime). c.f.
+	   LINKLIST
+
+	2. there is no easy support for duplicating/templating op trees. Due to the
+	   linked list nature, it's easy to leave dangling pointers which make
+	   things difficult. Furthermore the B::OP hierarchy is not extensible for
+	   e.g. placeholder values.
+
+	3. Certain ops are superflous for the structure due to Perl's stack based
+	   execution semantics. For instance the location of the invocant in a
+	   method call, or the necessity of creating 'pushmark' nodes as the first
+	   child of listops is a burden. These details can be easily represented in
+	   a more abstract way in much the same way as Perl's op.c handles the
+	   creation of these ops using convenience routines.
+
+The B::Simple optree representation is designed to mask the details of
+"attached" versus "floating" optrees.
+
+Attached optrees correspond to real B::OPs and modifying them is akin to using
+B::Generate.
+
+Floating optrees are identical in their high level structure, but do not
+contain links to B::OPs at all. Instead their children are managed using simple
+Perl data structures.
+
+Attached trees can be converted into a floating version, and floating trees can
+be anchored into the attached tree, converting them into attached subtrees.
+
+The attached trees are kept in a live object cache corresponding to the B::OP
+objects they tie to.
+
+By allowing the user to easily manipulate a detached representation which has
+no side effects on the actual B::OPs the process of templating optrees is
+greatly simplified. The floating representation can also contain custom nodes
+for an extensible structure.
+
+While the attached otpree can be modified in place as well, the supported
+operations are not as flexible because the actual storage is tied to real B::OP
+objects, so no extensibility is possible.
+
+
+The class hierarchy in B::Simple:
+
+	a node is a B::OP or B::SV or some sort of similar object. Anything you can
+	find in the tree that B::Simple is potentially responsible for
+
+	an OP is a node that generally corresponds to a single B::OP object, but
+	with details hidden
+
+	a collection is an abstraction for parent <-> child relationships. It
+	provides a consistent API for getting at the child objects regardless of
+	whether the optree is floating or attached.
+
+	
